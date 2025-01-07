@@ -1,23 +1,42 @@
 <template>
-  <div>
-    <NuxtRouteAnnouncer />
-    <h1>TODO App</h1>
+  <v-app>
+    <v-main>
+      <v-container>
+        <h1 class="text-center">TODO App</h1>
 
-    <form @submit.prevent="addTodo">
-      <input v-model="newTodo" type="text" placeholder="Enter a new todo" />
-      <button type="submit">Add Todo</button>
-    </form>
+        <v-form @submit.prevent="addTodo">
+          <v-row>
+            <v-col cols="9">
+              <v-text-field
+                v-model="newTodo"
+                label="Enter a new todo"
+                outlined
+              ></v-text-field>
+            </v-col>
+            <v-col cols="3">
+              <v-btn color="primary" block type="submit">Add Todo</v-btn>
+            </v-col>
+          </v-row>
+        </v-form>
 
-    <ul>
-      <li v-for="todo in todos" :key="todo.id">
-        <span :class="{ 'completed': todo.completed }">
-          {{ todo.text }}
-        </span>
-        <button @click="toggleComplete(todo)">Toggle Complete</button>
-        <button @click="deleteTodo(todo.id)">Delete</button>
-      </li>
-    </ul>
-  </div>
+        <v-list>
+          <v-list-item
+            v-for="todo in todos"
+            :key="todo.id"
+            :class="{ 'text-decoration-line-through': todo.completed }"
+          >
+            <v-list-item-content>{{ todo.text }}</v-list-item-content>
+            <v-btn icon @click="toggleComplete(todo)">
+              <v-icon>{{ todo.completed ? 'mdi-check' : 'mdi-circle-outline' }}</v-icon>
+            </v-btn>
+            <v-btn icon color="red" @click="deleteTodo(todo.id)">
+              <v-icon>mdi-delete</v-icon>
+            </v-btn>
+          </v-list-item>
+        </v-list>
+      </v-container>
+    </v-main>
+  </v-app>
 </template>
 
 <script setup>
@@ -43,18 +62,15 @@ const fetchTodos = async () => {
 const addTodo = async () => {
   if (newTodo.value.trim() === '') return;
 
-  const { data, error } = await $supabase
+  const { error } = await $supabase
     .from('todos')
     .insert([{ text: newTodo.value, completed: false }]);
 
   if (error) {
     console.error('Error adding todo:', error);
-    return; // Stop further processing if there's an error
-  }
-
-  if (data) {
-    todos.value.push(...data); // Push new todo to the list
-    newTodo.value = ''; // Clear the input field
+  } else {
+    await fetchTodos();
+    newTodo.value = '';
   }
 };
 
@@ -90,8 +106,7 @@ onMounted(() => {
 </script>
 
 <style>
-.completed {
+.text-decoration-line-through {
   text-decoration: line-through;
-  color: gray;
 }
 </style>
